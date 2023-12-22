@@ -9,10 +9,22 @@
 <!-- css -->
 <style>
   /* default */
+  * {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: red;
+  }
+  body {
+    background: black;
+  }
 
   /* main */
 
   /* admin */
+  #admin-blogs-edit {
+    display: none;
+  }
 
   /* views */
 
@@ -23,6 +35,15 @@
   <!-- html -->
   <p id="views"></p>
 
+  <div id="admin-blogs-edit">
+    <form action="javascript:;" onsubmit="adminAddBlog(this, this.title.value, this.description.value)">
+      <input type="text" name="title" placeholder="Blog title">
+      <input type="text" name="description" placeholder="Blog description">
+      <input type="submit" value="Add blog">
+    </form>
+  </div>
+
+  <input type="password" name="admin-password" id="admin-password-input">
 
 </body>
 </html>
@@ -57,6 +78,27 @@
   }
 
   // admin
+  var ifAdmin = false;
+  const adminBlogsEdit = document.getElementById("admin-blogs-edit");
+  const adminPasswordInput = document.getElementById("admin-password-input");
+
+  //Ввод пароля админа
+  adminPasswordInput.oninput = () => {
+    let password = adminPasswordInput.value;
+    if (password > 8) {
+      adminPasswordInput.value = password.slice(0, 8);
+    }
+    if (password === "admin") {
+      ifAdmin = true;
+      showAdminBlogsEdit();
+    }
+  }
+
+  //Скрывает или показывает окно админа
+  function showAdminBlogsEdit() {
+    adminBlogsEdit.style.display = "flex";
+    adminPasswordInput.style.display = "none";
+  }
 
   // views
   async function onLoadViews() {
