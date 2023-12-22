@@ -10,8 +10,9 @@
 <style>
   /* default */
   * {
-    margin: 0;
-    padding: 0;
+    margin-top: 5px;
+    margin-left: 5px;
+    padding: 3px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: red;
   }
@@ -85,7 +86,7 @@
   //Ввод пароля админа
   adminPasswordInput.oninput = () => {
     let password = adminPasswordInput.value;
-    if (password > 8) {
+    if (password.length > 8) {
       adminPasswordInput.value = password.slice(0, 8);
     }
     if (password === "admin") {
@@ -94,7 +95,7 @@
     }
   }
 
-  //Скрывает или показывает окно админа
+  //Показывает окно админа
   function showAdminBlogsEdit() {
     adminBlogsEdit.style.display = "flex";
     adminPasswordInput.style.display = "none";
@@ -103,7 +104,7 @@
   // views
   async function onLoadViews() {
     let snap = await get(ref(db, "views"));
-    //Если база анных пуста
+    //Если база данных пуста
     if (!snap.exists()){
       set(ref(db), {views: 0});
       return;
