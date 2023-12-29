@@ -21,18 +21,66 @@
   }
 
   /* main */
+  /*Название и его задняя панель*/
+  #title_blog {
+    color: red;
+    font-size: 30px;
+    margin-left: 550px;
+  }
+  #title_blog_display {
+    margin-top: -6px;
+    margin-left: -6px;
+    width: 1200px;
+    height: 50px;
+    background-color: blueviolet;
+    border-radius: 8px;
+    border: 4px solid violet;
+  }
+  /*Для изменения дисплея блогов*/
+  #display_blogs {
+    margin-top: 72px;
+    margin-left: 125px;
+    width: 1200px;
+    height: 1200px;
+    background-color: blanchedalmond;
+    border-radius: 8px;
+    border: 4px solid violet;
+  }
+  #admin-password-input {
+    border-radius: 8px;
+    border: 4px solid violet;
+  }
 
   /* admin */
+  /*Дисплей-фон*/
+  #display_admin_blog {
+    margin-top: 64px;
+    margin-left: 490px;
+    width: 400px;
+    height: 100px;
+    background-color: blanchedalmond;
+    border-radius: 8px;
+    border: 4px solid violet;
+  }
   /*Для изменения дисплея*/
   #admin-blogs-edit {
     display: none;
     margin-top: 5px;
-    margin-left: 250px;
+    /*margin-left: 100px;*/
+  }
+  /*Для изменения текстовых полей дисплея*/
+  #admin-blogs-edit input[type="text"] {
+    border-radius: 8px;
+    border: 4px solid violet;
+    font-family: sans-serif;
+
   }
   /*Для изменения кнопки дисплея*/
   #admin-blogs-edit input[type="submit"] {
-    color: black;
-    background-color: aqua;
+    color: red;
+    background-color: blue;
+    border-radius: 8px;
+    border: 4px solid violet;
   }
 
   /* views */
@@ -44,15 +92,23 @@
   <!-- html -->
   <p id="views"></p>
 
-  <div id="admin-blogs-edit">
+  <input type="password" name="admin-password" id="admin-password-input">
+
+  <div id="display_admin_blog" style="display: none;">
+    <div id="admin-blogs-edit">
     <form action="javascript:;" onsubmit="adminAddBlog(this, this.title.value, this.description.value)">
-      <input type="text" name="title" placeholder="Blog title">
-      <input type="text" name="description" placeholder="Blog description">
+      <input id="blog_title_input" type="text" name="title" placeholder="Blog title">
+      <input id="blog_desc_input" type="text" name="description" placeholder="Blog description">
       <input type="submit" value="Add blog">
-    </form>
+    </form> 
+    </div>
   </div>
 
-  <input type="password" name="admin-password" id="admin-password-input">
+  <div id="display_blogs" style="display: block;">
+    <div id="title_blog_display">
+      <div id="title_blog">Blog</div>
+    </div>
+  </div>
 
 </body>
 </html>
@@ -90,6 +146,7 @@
   var ifAdmin = false;
   const adminBlogsEdit = document.getElementById("admin-blogs-edit");
   const adminPasswordInput = document.getElementById("admin-password-input");
+  const displayAdmin = document.getElementById("display_admin_blog");
 
   //Ввод пароля админа
   adminPasswordInput.oninput = () => {
@@ -97,7 +154,7 @@
     if (password.length > 8) {
       adminPasswordInput.value = password.slice(0, 8);
     }
-    if (password === "admin") {
+    if (password === "admin") {  //password "admin"
       ifAdmin = true;
       showAdminBlogsEdit();
     }
@@ -107,9 +164,13 @@
   function showAdminBlogsEdit() {
     adminBlogsEdit.style.display = "flex";
     adminPasswordInput.style.display = "none";
+    displayAdmin.style.display = "block";
   }
 
   // views
+  const viewsRu = "Заходов на сайт:"
+  const viewsEngl = "Views:"
+
   async function onLoadViews() {
     let snap = await get(ref(db, "views"));
     //Если база данных пуста
@@ -119,7 +180,7 @@
     }
     //Изменение базы данных
     update(ref(db), {views: snap.val() + 1});
-    document.getElementById("views").innerText = snap.val() + 1;
+    document.getElementById("views").innerText = `${viewsEngl} ${snap.val() + 1}`;
     console.log("Views Loaded");
   }
 
