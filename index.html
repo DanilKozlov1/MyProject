@@ -111,10 +111,16 @@
     </div>
   </div>
 
-  <div id="display_blogs" style="display: block;">
+  <!--Сделать оформление-->
+  <!-- <div class="display_blogs" style="display: block;">
     <div id="title_blog_display">
       <div id="title_blog">Blog</div>
+      
     </div>
+  </div> -->
+  <p id="total-blogs"></p>
+  <div id="blogs-container">
+    <p>Loading. . . . . </p>
   </div>
 
 </body>
@@ -146,6 +152,46 @@
 
   // main
   async function onLoadMain() {
+    const blogsContainer = document.getElementById("blogs-container");
+    let snap = await get(ref(db, "blogs"));
+    if (!snap.exists()) {
+      blogsContainer.innerHTML = "<p>No blogs</p>"
+      return;
+    }
+
+    const blogs = [];
+    snap.forEach(blogsSnap => {
+      const blog = blogsSnap.val();
+      blog.key = blogsSnap.key;
+      blogs.push(blog);
+    });
+    blogs.sort((a, b ) => {
+      return b.date - a.date;
+    });
+
+    document.getElementById("total-blogs").innerHTML = `Total blogs: ${blogs.length}`;
+
+    const blogsHTML = blogs.map(blog => {
+      let date = (new Date(blog.date)).toLocaleDateString();
+      if (blog.description != null) {
+        return `
+          <div class="blog" onclick="viewBlog('${blog.title.toLowerCase}')")>
+            <h2>${blog.title}</h2>
+            <h2>${blog.description}</h2>
+            <h2>${date}</h2>
+          </div>
+        `
+      } else {
+        return `
+          <div class="blog" onclick="viewBlog('${blog.title.toLowerCase}')")>
+            <h2>${blog.title}</h2>
+            <h2>${date}</h2>
+          </div>
+        `
+      }
+    }).join("");
+
+    blogsContainer.innerHTML = blogsHTML;
     console.log("Main Loaded");
   }
 
@@ -176,6 +222,63 @@
     displayAdmin.style.display = "block";
   }
 
+  // Добавление блогов
+  window.adminAddBlog = async (thisForm, title, description) => {
+    // Проверка на то что пользователь админ
+    if (!ifAdmin) {
+      alert("Ты даже не админ!");
+      return;
+    }
+    // Проверка на недоступные символы
+    if (/[.#$\[\]]/.test(title)) {
+      alert('Название не может содержать: \n".", "#", "$", "[", "]"');
+      return;
+    }
+    // Проверка на длину названия
+    if (title.length < 3) {
+      alert("Название слишком короткое, \nМинимальная длина: 3 символа");
+      return;
+    }
+    if (title.length > 32) {
+      alert("Название слишком длинное, \nМаксимальная длина: 32 символа");
+      return;
+    }
+    // Проверка на длину текста
+    if (description.length > 64) {
+      alert("Текст слишком длинный, \nМаксимальная длина: 64 символа");
+      return;
+    }
+
+    // Проверка на существования блога
+    let snap = await get(ref(db, "blogs/" + title.toLowerCase()));
+    if (snap.exists()) {
+      alert("Заметка с этим названием и текстом уже есть уже существует");
+      return;
+    }
+
+    const blogData = {
+      title: title,
+      date: Date.now()
+    };
+
+    if (description.length > 0) {
+      if (description.length < 6) {
+        alert("Текст слишком короткий, \nМинимальная длина: 6 символов");
+        return;
+      }
+      blogData.description = description;
+    }
+    await set(ref(db, "blogs/" + title.toLowerCase()), blogData);
+    // Внешнее изменение кнопки после добавления блога
+    thisForm.querySelector("input[type='submit']").style.background = "#55dbaf";
+    thisForm.querySelectorAll("input[type='text']").forEach((thisInput) => {
+      thisInput.value = "";
+    });
+    setTimeout(() => {
+      thisForm.querySelector("input[type='submit']").style.background = "blue";
+    }, 1000)
+  }
+
   // views
   const viewsRu = "Заходов на сайт:"
   const viewsEngl = "Views:"
@@ -189,7 +292,7 @@
     }
     //Изменение базы данных
     update(ref(db), {views: snap.val() + 1});
-    document.getElementById("views").innerText = `${viewsEngl} ${snap.val() + 1}`;
+    document.getElementById("views").innerText = `${viewsRu} ${snap.val() + 1}`;
     console.log("Views Loaded");
   }
 
