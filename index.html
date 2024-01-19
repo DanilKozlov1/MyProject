@@ -156,12 +156,14 @@
   const displayAdmin = document.getElementById("display_admin_blog");
 
   //Ввод пароля админа
+  const adminPassword = "qwer"
+
   adminPasswordInput.oninput = () => {
     let password = adminPasswordInput.value;
     if (password.length > 8) {
       adminPasswordInput.value = password.slice(0, 8);
     }
-    if (password === "admin") {  //password "admin"
+    if (password === adminPassword) {  
       ifAdmin = true;
       showAdminBlogsEdit();
     }
