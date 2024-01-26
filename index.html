@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,6 +17,7 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: red;
   }
+
   body {
     background: black;
   }
@@ -29,6 +31,7 @@
     left: 50%;
     transform: translate(-50%);
   }
+
   #title_blog_display {
     margin-top: -6px;
     margin-left: -6px;
@@ -37,7 +40,10 @@
     background-color: blueviolet;
     border-radius: 8px;
     border: 4px solid violet;
-  }*/
+  }
+
+  */
+
   /*Для изменения дисплея блогов*/
   #display_blogs {
     margin-top: 192px;
@@ -57,6 +63,7 @@
     left: 50%;
     transform: translate(-50%);
   }
+
   #admin-password-input {
     border-radius: 8px;
     border: 4px solid violet;
@@ -76,12 +83,14 @@
     border-radius: 8px;
     border: 4px solid violet;
   }
+
   /*Для изменения дисплея*/
   #admin-blogs-edit {
     display: none;
     margin-top: 5px;
     /*margin-left: 100px;*/
   }
+
   /*Для изменения текстовых полей дисплея*/
   #admin-blogs-edit input[type="text"] {
     border-radius: 8px;
@@ -89,6 +98,7 @@
     font-family: sans-serif;
 
   }
+
   /*Для изменения кнопки дисплея*/
   #admin-blogs-edit input[type="submit"] {
     color: red;
@@ -98,7 +108,6 @@
   }
 
   /* views */
-
 </style>
 
 <body>
@@ -110,11 +119,11 @@
 
   <div id="display_admin_blog" style="display: none;">
     <div id="admin-blogs-edit">
-    <form action="javascript:;" onsubmit="adminAddBlog(this, this.title.value, this.description.value)">
-      <input id="blog_title_input" type="text" name="title" placeholder="Blog title">
-      <input id="blog_desc_input" type="text" name="description" placeholder="Blog description">
-      <input type="submit" value="Add blog">
-    </form> 
+      <form action="javascript:;" onsubmit="adminAddBlog(this, this.title.value, this.description.value)">
+        <input id="blog_title_input" type="text" name="title" placeholder="Blog title">
+        <input id="blog_desc_input" type="text" name="description" placeholder="Blog description">
+        <input type="submit" value="Add blog">
+      </form>
     </div>
   </div>
 
@@ -132,6 +141,7 @@
   </div>
 
 </body>
+
 </html>
 
 <!-- js -->
@@ -140,15 +150,15 @@
   import { getDatabase, ref, set, get, update, DataSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
   const firebaseConfig = {
-  apiKey: "AIzaSyAtVrBakI068r_ZVJFfp5vZwHJ7Y9VM6HY",
-  authDomain: "myproject-43c47.firebaseapp.com",
-  databaseURL: "https://myproject-43c47-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "myproject-43c47",
-  storageBucket: "myproject-43c47.appspot.com",
-  messagingSenderId: "768602059600",
-  appId: "1:768602059600:web:2cacfd25858342652f7255",
-  measurementId: "G-MM0JDR69Y3"
-};
+    apiKey: "AIzaSyAtVrBakI068r_ZVJFfp5vZwHJ7Y9VM6HY",
+    authDomain: "myproject-43c47.firebaseapp.com",
+    databaseURL: "https://myproject-43c47-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "myproject-43c47",
+    storageBucket: "myproject-43c47.appspot.com",
+    messagingSenderId: "768602059600",
+    appId: "1:768602059600:web:2cacfd25858342652f7255",
+    measurementId: "G-MM0JDR69Y3"
+  };
 
   const app = initializeApp(firebaseConfig);
   export const db = getDatabase(app);
@@ -173,7 +183,7 @@
       blog.key = blogsSnap.key;
       blogs.push(blog);
     });
-    blogs.sort((a, b ) => {
+    blogs.sort((a, b) => {
       return b.date - a.date;
     });
 
@@ -217,7 +227,7 @@
     if (password.length > 8) {
       adminPasswordInput.value = password.slice(0, 8);
     }
-    if (password === adminPassword) {  
+    if (password === adminPassword) {
       ifAdmin = true;
       showAdminBlogsEdit();
     }
@@ -294,12 +304,12 @@
   async function onLoadViews() {
     let snap = await get(ref(db, "views"));
     //Если база данных пуста
-    if (!snap.exists()){
-      set(ref(db), {views: 0});
+    if (!snap.exists()) {
+      set(ref(db), { views: 0 });
       return;
     }
     //Изменение базы данных
-    update(ref(db), {views: snap.val() + 1});
+    update(ref(db), { views: snap.val() + 1 });
     document.getElementById("views").innerText = `${viewsRu} ${snap.val() + 1}`;
     console.log("Views Loaded");
   }
@@ -307,4 +317,5 @@
 </script>
 
 </body>
+
 </html>
