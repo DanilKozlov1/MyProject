@@ -22,39 +22,62 @@
     background: black;
   }
 
+  .hidden {
+      display: none;
+    }
+
   /* main */
-  /*Название и его задняя панель*/
-  #title_blog {
+  .blog {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: blanchedalmond;
+    border-radius: 8px;
+    border: 4px solid violet;
+    width: 1350px;
+    height: 100px;
+  }
+  .blog-title {
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  .blog-description {
+    font-weight: 300;
+    font-size: 1.25rem;
+    margin: 0 8px;
+  }
+  .blog-date {
+    font-weight: 300;
     color: red;
-    font-size: 30px;
-    position: absolute;
-    left: 50%;
-    transform: translate(-50%);
+    font-size: 1rem;
+    margin: -75px 0 0 1200px;
   }
-
-  #title_blog_display {
-    margin-top: -6px;
-    margin-left: -6px;
-    width: 1200px;
-    height: 50px;
-    background-color: blueviolet;
-    border-radius: 8px;
-    border: 4px solid violet;
+  .blog-delete {
+    color: #dd622e;
+    font-size: 1.5rem;
+    margin: -28px 0 -24px;
+    text-align: center;
+    cursor: pointer;
   }
-
-  */
-
-  /*Для изменения дисплея блогов*/
-  #display_blogs {
-    margin-top: 192px;
-    position: absolute;
-    left: 50%;
-    transform: translate(-50%);
-    width: 1200px;
-    height: 1200px;
-    background-color: blanchedalmond;
-    border-radius: 8px;
-    border: 4px solid violet;
+  @media screen and (max-width: 800px) { 
+    .blog {
+      margin-bottom: 8px;
+      padding: 8px;
+    }
+    .blog-title {
+      font-size: 1.25rem;
+    }
+    .blog-description {
+      font-size: 1rem;
+      margin: 2px 4px;
+    }
+    .blog-date {
+      font-size: 0.75rem;
+      margin-top: 4px 0 -2px 0;
+    }
+    .blog-delete {
+      font-size: 1.25rem;
+      margin: -25px 0 -10px;
+    }
   }
 
   #blogs-container {
@@ -65,6 +88,10 @@
   }
 
   #admin-password-input {
+    border-radius: 8px;
+    border: 4px solid violet;
+  }
+  #search-field-input {
     border-radius: 8px;
     border: 4px solid violet;
   }
@@ -116,6 +143,7 @@
   <p id="views"></p>
 
   <input type="password" name="admin-password" id="admin-password-input">
+  <input type="find" name="search-field" id="search-field-input">
 
   <div id="display_admin_blog" style="display: none;">
     <div id="admin-blogs-edit">
@@ -127,17 +155,9 @@
     </div>
   </div>
 
-  <!--Сделать оформление-->
-  <!-- <div class="display_blogs" style="display: block;">
-    <div id="title_blog_display">
-      <div id="title_blog">Blog</div>
-      
-    </div>
-  </div> -->
-
-  <p id="total-blogs"></p>
+  <p id="blogs-count"></p>
   <div id="blogs-container">
-    <p>Loading. . . . . </p>
+    <p>Загрузка. . . . . </p>
   </div>
 
 </body>
@@ -147,7 +167,7 @@
 <!-- js -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-  import { getDatabase, ref, set, get, update, DataSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+  import { getDatabase, ref, set, get, update, remove, DataSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAtVrBakI068r_ZVJFfp5vZwHJ7Y9VM6HY",
@@ -163,55 +183,109 @@
   const app = initializeApp(firebaseConfig);
   export const db = getDatabase(app);
 
+  function formatDate(date) {
+    let options = {
+      year: "2-digit",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    };
+    return new Date(date).toLocaleDateString(undefined, options);
+  };
+
   window.onload = async () => {
-    onLoadMain();
-    onLoadViews();
-  }
+    loadMain();
+    loadViews();
+  };
 
   // main
-  async function onLoadMain() {
+  async function loadMain() {
+    if (!location.hash) {
+      await searchBlogs();
+      return;
+    }
     const blogsContainer = document.getElementById("blogs-container");
+    const blogName = decodeURIComponent(location.hash).substring(1);
+    let snap = await get(ref(db, "blogs/" + blogName));
+    if (!snap.exists()) {
+      blogsContainer.innerHTML = `<p>Ни одного блога с таким названием ${blogName} не обнаружено</p>`;
+      return;
+    }
+    let blog = snap.val();
+
+    document.getElementById("blogs-count").innerHTML = formatDate(blog.date);
+    const blogDescription = blog.description ? `<p class="blog-description">${blog.description}</p>` : "";
+    const hiddenClass = ifAdmin ? "" : " hidden";
+
+    blogsContainer.innerHTML = `
+      <div class="blog">
+        <p class="blog-title" onclick="viewBlog()">${blog.title}</p>
+        ${blogDescription}
+        <div class="blog-delete${hiddenClass}" onclick="adminDelBlog('${blog.title.toLowerCase()}')">ⓧ</div>
+      </div>
+    `;
+  };
+
+  window.searchBlogs = async (context) => {
+    const blogsContainer = document.getElementById("blogs-container");
+    const searchFieldInput = document.getElementById("search-field-input")
+
     let snap = await get(ref(db, "blogs"));
     if (!snap.exists()) {
-      blogsContainer.innerHTML = "<p>No blogs</p>"
+      blogsContainer.innerHTML = "<p>No blogs found</p>";
       return;
     }
 
     const blogs = [];
-    snap.forEach(blogsSnap => {
-      const blog = blogsSnap.val();
-      blog.key = blogsSnap.key;
-      blogs.push(blog);
+    snap.forEach((blogSnap) => {
+      if (!context || context == "" || blogSnap.key.includes(context.toLowerCase())) {
+        const blog = blogSnap.val();
+        blog.key = blogSnap.key;
+        blogs.push(blog);
+      }
     });
+    
     blogs.sort((a, b) => {
       return b.date - a.date;
     });
 
-    document.getElementById("total-blogs").innerHTML = `Total blogs: ${blogs.length}`;
+    const blogsHTML = blogs
+      .map((blog) => {
+        const blogDescription = blog.description ? `<p class="blog-description">${blog.description}</p>` : "";
+        const hiddenClass = ifAdmin ? "" : " hidden";
 
-    const blogsHTML = blogs.map(blog => {
-      let date = (new Date(blog.date)).toLocaleDateString();
-      if (blog.description != null) {
         return `
-          <div class="blog" onclick="viewBlog('${blog.title.toLowerCase}')")>
-            <h2>${blog.title}</h2>
-            <h2>${blog.description}</h2>
-            <h2>${date}</h2>
+          <div class="blog">
+            <p class="blog-title" onclick="viewBlog('${blog.title.toLowerCase()}')">${blog.title}</p>
+            ${blogDescription}
+            <p class="blog-date">${formatDate(blog.date)}</p>
+            <div class="blog-delete${hiddenClass}" onclick="adminDelBlog('${blog.title.toLowerCase()}')">ⓧ</div>
           </div>
-        `
-      } else {
-        return `
-          <div class="blog" onclick="viewBlog('${blog.title.toLowerCase}')")>
-            <h2>${blog.title}</h2>
-            <h2>${date}</h2>
-          </div>
-        `
-      }
-    }).join("");
+        `;
+      })
+    .join("");
+
+    const blogsCount = document.getElementById("blogs-count");
+    if (!context || context == "") {
+      blogsCount.innerHTML = `Total blogs: ${blogs.length}`;
+    } else {
+      blogsCount.innerHTML = `Blogs found: ${blogs.length}`;
+    }
 
     blogsContainer.innerHTML = blogsHTML;
-    console.log("Main Loaded");
-  }
+  };
+
+  window.viewBlog = (blogId) => {
+    if (!blogId || blogId == "") {
+      window.location.hash = "";
+      loadMain();
+    } else {
+      window.location.hash = blogId;
+      loadMain();
+    }
+  };
 
   // admin
   var ifAdmin = false;
@@ -220,25 +294,31 @@
   const displayAdmin = document.getElementById("display_admin_blog");
 
   //Ввод пароля админа
-  const adminPassword = "qwer"
+  const adminPasswordEn = "qwer"
+  const adminPasswordRu = "йцук"
 
   adminPasswordInput.oninput = () => {
     let password = adminPasswordInput.value;
     if (password.length > 8) {
       adminPasswordInput.value = password.slice(0, 8);
     }
-    if (password === adminPassword) {
+    if (password === adminPasswordEn || password === adminPasswordRu) {
       ifAdmin = true;
       showAdminBlogsEdit();
     }
-  }
+  };
 
   //Показывает окно админа
   function showAdminBlogsEdit() {
     adminBlogsEdit.style.display = "flex";
     adminPasswordInput.style.display = "none";
     displayAdmin.style.display = "block";
-  }
+
+    let elements = Array.from(document.getElementsByClassName("blog-delete"));
+    elements.forEach((element) => {
+      element.classList.remove("hidden");
+    });
+  };
 
   // Добавление блогов
   window.adminAddBlog = async (thisForm, title, description) => {
@@ -276,7 +356,7 @@
 
     const blogData = {
       title: title,
-      date: Date.now()
+      date: Date.now(),
     };
 
     if (description.length > 0) {
@@ -295,13 +375,31 @@
     setTimeout(() => {
       thisForm.querySelector("input[type='submit']").style.background = "blue";
     }, 1000)
-  }
+    searchBlogs();
+  };
+
+  window.adminDelBlog = async (blogId) => {
+    if (!ifAdmin) {
+      alert("Ты даже не админ!");
+      return;
+    }
+
+    let snap = await get(ref(db, "blogs/" + blogId));
+    if (!snap.exists()) {
+      alert("Нет блогов с таким названием!");
+      return;
+    }
+
+    if (window.confirm(`Вы действительно хотите удалить блог "${blogId}"?`)) {
+      await remove(ref(db, "blogs/" + blogId));
+      searchBlogs();
+    }
+  };
 
   // views
   const viewsRu = "Заходов на сайт:"
-  const viewsEngl = "Views:"
 
-  async function onLoadViews() {
+  async function loadViews() {
     let snap = await get(ref(db, "views"));
     //Если база данных пуста
     if (!snap.exists()) {
@@ -311,8 +409,7 @@
     //Изменение базы данных
     update(ref(db), { views: snap.val() + 1 });
     document.getElementById("views").innerText = `${viewsRu} ${snap.val() + 1}`;
-    console.log("Views Loaded");
-  }
+  };
 
 </script>
 
